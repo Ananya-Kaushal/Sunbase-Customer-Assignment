@@ -10,20 +10,11 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
-    /*// Custom query to find customers by city
-    List<Customer> findByCity(String city);
-
-    // Custom query using JPQL
-    @Query("SELECT c FROM Customer c WHERE c.email = :email")
-    Customer findByEmail(@Param("email") String email);
-
-    // Custom query using native SQL
-    @Query(value = "SELECT * FROM customers WHERE phone = :phone", nativeQuery = true)
-    Customer findByPhone(@Param("phone") String phone);*/
-
+    Optional<Customer> findByEmail(String email);
     Page<Customer> findByUser(User user, Pageable pageable);
 }

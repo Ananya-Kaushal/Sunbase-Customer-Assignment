@@ -10,6 +10,7 @@ import com.example.Sun_Base_Customer_Application.repository.UserRepository;
 import com.example.Sun_Base_Customer_Application.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,6 +19,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Optional;
+
 @RestController
 @RequestMapping("/api")
 public class AuthController {
@@ -35,20 +39,28 @@ public class AuthController {
 
     @PostMapping("/authenticate")
     public String authenticateUser(@RequestBody LoginRequest loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginRequest.getUsername(),
-                        loginRequest.getPassword()
-                )
-        );
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.getUsername(),
+                            loginRequest.getPassword()
+                    )
+            );
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        return tokenProvider.generateToken(authentication);
+            return tokenProvider.generateToken(authentication);
+        } catch (BadCredentialsException ex) {
+            return "Invalid username or password!";
+        }
     }
 
     @PostMapping("/signup")
     public String registerUser(@RequestBody LoginRequest signUpRequest) {
+        Optional<User> existingUser = userRepository.findByUsername(signUpRequest.getUsername());
+        if (existingUser.isPresent()) {
+            return "Username is already taken!";
+        }
         User user = new User();
         user.setUsername(signUpRequest.getUsername());
         user.setPassword(passwordEncoder.encode(signUpRequest.getPassword()));

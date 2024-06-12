@@ -3,10 +3,13 @@ package com.example.Sun_Base_Customer_Application.controller;
 import com.example.Sun_Base_Customer_Application.exception.ResourceNotFoundException;
 import com.example.Sun_Base_Customer_Application.model.Customer;
 import com.example.Sun_Base_Customer_Application.model.User;
+import com.example.Sun_Base_Customer_Application.payload.LoginRequest;
 import com.example.Sun_Base_Customer_Application.repository.UserRepository;
 import com.example.Sun_Base_Customer_Application.service.CustomerService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -73,5 +76,15 @@ public class CustomerController {
                 .orElseThrow(() ->new ResourceNotFoundException("User not found"));
         customerService.deleteCustomer(id, user);
         return "Customer deleted successfully";
+    }
+
+    // sync customers from remote API
+    @PostMapping("/sync")
+    public ResponseEntity<String> syncCustomers(@RequestBody LoginRequest loginRequest, Authentication authentication) throws JsonProcessingException, JsonProcessingException {
+        String username = ((UserDetails) authentication.getPrincipal()).getUsername();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        customerService.syncCustomers(loginRequest, user);
+        return ResponseEntity.ok("Customers synced successfully");
     }
 }
