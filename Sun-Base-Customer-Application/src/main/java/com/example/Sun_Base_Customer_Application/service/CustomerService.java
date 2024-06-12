@@ -36,6 +36,7 @@ public class CustomerService {
     }
 
     //update customer
+    //update customer
     public Customer updateCustomer(Long id, Customer customerDetails, User user){
         Customer customer = customerRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
         if (!customer.getUser().getId().equals(user.getId())) {
@@ -53,9 +54,25 @@ public class CustomerService {
     }
 
     //get all customers
-    public Page<Customer> getAllCustomers(User user, int page, int size, String sortBy){
+    public Page<Customer> getAllCustomers(User user, int page, int size, String sortBy, String searchBy, String searchValue) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
-        return customerRepository.findByUser(user, pageable);
+
+        if (searchBy != null && searchValue != null) {
+            switch (searchBy) {
+                case "firstName":
+                    return customerRepository.findByUserAndFirstNameContaining(user, searchValue, pageable);
+                case "city":
+                    return customerRepository.findByUserAndCityContaining(user, searchValue, pageable);
+                case "email":
+                    return customerRepository.findByUserAndEmailContaining(user, searchValue, pageable);
+                case "phone":
+                    return customerRepository.findByUserAndPhoneContaining(user, searchValue, pageable);
+                default:
+                    return customerRepository.findByUser(user, pageable);
+            }
+        } else {
+            return customerRepository.findByUser(user, pageable);
+        }
     }
 
     // get customer by id
